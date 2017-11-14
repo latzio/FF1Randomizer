@@ -331,10 +331,16 @@ namespace FF1Lib
 				var startingMapLocations = mapLocationRequirements.Where(x => x.Value.Any(y => y == MapChange.None)).Select(x => x.Key);
 				var validShipMapLocations = mapLocationRequirements.Where(x => x.Value.Any(y => MapChange.Bridge.HasFlag(y))).Select(x => x.Key);
 				var validCanoeMapLocations = mapLocationRequirements.Where(x => x.Value.Any(y => everythingButCanoe.HasFlag(y))).Select(x => x.Key);
-				validBridgeLocations = itemLocationPool.Where(x => startingMapLocations.Contains(x.MapLocation)).ToList();
-				validShipLocations = itemLocationPool.Where(x => validShipMapLocations.Contains(x.MapLocation)).ToList();
-				validCanoeLocations = itemLocationPool.Where(x => validCanoeMapLocations.Contains(x.MapLocation)).ToList();
-	
+				validBridgeLocations =
+					itemLocationPool.Where(x => startingMapLocations.Contains(x.MapLocation) &&
+						startingMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation)).ToList();
+				validShipLocations =
+					itemLocationPool.Where(x => validShipMapLocations.Contains(x.MapLocation) &&
+						validShipMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation)).ToList();
+				validCanoeLocations =
+					itemLocationPool.Where(x => validCanoeMapLocations.Contains(x.MapLocation) &&
+						validCanoeMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation)).ToList();
+
 				var canoePlacementRank = rng.Between(1, incentivePool.Count);
 				var validCanoeIncentives = validCanoeLocations.Where(x => incentiveLocationPool.Any(y => y.Address == x.Address)).ToList();
 				if (incentivePool.Contains(Item.Canoe) && canoePlacementRank <= incentiveLocationPool.Count &&

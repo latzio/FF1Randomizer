@@ -98,9 +98,15 @@ namespace FF1Lib
 						placedItems.Add(NewItemPlacement(canoeLocations.Where(x => !placedItems.Any(y => y.Address == x.Address)).ToList().PickRandom(rng), Item.Canoe));
 					}
 
-					var startingCanoeAvailable = placedItems.Any(x => x.Item == Item.Canoe && startingMapLocations.Contains(x.MapLocation));
-					var earlyCanoeAvailable = placedItems.Any(x => x.Item == Item.Canoe && earlyMapLocations.Contains(x.MapLocation));
-					var earlyKeyAvailable = placedItems.Any(x => x.Item == Item.Key && earlyMapLocations.Contains(x.MapLocation));
+					var startingCanoeAvailable = 
+						placedItems.Any(x => x.Item == Item.Canoe && startingMapLocations.Contains(x.MapLocation) &&
+							startingMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation));
+					var earlyCanoeAvailable = 
+						placedItems.Any(x => x.Item == Item.Canoe && earlyMapLocations.Contains(x.MapLocation) &&
+							earlyMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation));
+					var earlyKeyAvailable = 
+						placedItems.Any(x => x.Item == Item.Key && earlyMapLocations.Contains(x.MapLocation) &&
+							earlyMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation));
 
 					// 4. Place Bridge and Ship next since the valid location lists are so small, unless canoe is available and map edits are applied
 					if (!earlyCanoeAvailable || !canoeObsoletesShip)
@@ -122,11 +128,15 @@ namespace FF1Lib
 						placedItems.Add(NewItemPlacement(remainingShipLocations.PickRandom(rng), Item.Ship));
 					}
 
-					var startingShipAvailable = placedItems.Any(x => x.Item == Item.Ship && startingMapLocations.Contains(x.MapLocation));
+					var startingShipAvailable = 
+						placedItems.Any(x => x.Item == Item.Ship && startingMapLocations.Contains(x.MapLocation) &&
+							startingMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation));
 
 					if (!(startingCanoeAvailable && canoeObsoletesBridge) && !startingShipAvailable)
 					{
-						var startingKeyAvailable = earlyKeyAvailable && placedItems.Any(x => x.Item == Item.Key && startingMapLocations.Contains(x.MapLocation));
+						var startingKeyAvailable = 
+							earlyKeyAvailable && placedItems.Any(x => x.Item == Item.Key && startingMapLocations.Contains(x.MapLocation) &&
+								startingMapLocations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation));
 
 						var remainingBridgeLocations =
 							bridgeLocations
@@ -239,7 +249,7 @@ namespace FF1Lib
 							   var locations = currentMapLocations().ToList();
 							   return locations.Contains(x.MapLocation) &&
 										currentAccess.HasFlag(x.AccessRequirement) &&
-											   (!(x is MapObject) || locations.Contains(((MapObject)x).SecondLocation));
+									   locations.Contains((x as MapObject)?.SecondLocation ?? MapLocation.StartingLocation);
 						   });
 
 			var accessibleLocationCount = currentItemLocations().Count();

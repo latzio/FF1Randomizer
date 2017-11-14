@@ -95,7 +95,7 @@ namespace Sandbox
 
 				foreach (Item item in requirementsToCheck)
 				{
-					if (!ItemPlacement.CheckSanity(placedItems.Where(x => x.Item != item).ToList(), mapLocationRequirements, true))
+					if (!ItemPlacement.CheckSanity(placedItems.Where(x => x.Item != item).ToList(), mapLocationRequirements, new Flags{OnlyRequireGameIsBeatable =true}))
 						requirementChecks[item]++;
 				}
 				

@@ -90,7 +90,6 @@ namespace FF1Lib
 
 			var overworldMap = new OverworldMap(this, flags);
 			var maps = ReadMaps();
-			var incentivesData = new IncentiveData(rng, flags, overworldMap.MapLocationRequirements);
 			var shopItemLocation = ItemLocations.CaravanItemShop1;
 
 			if (flags.ModernBattlefield)
@@ -119,6 +118,18 @@ namespace FF1Lib
 				ShuffleItemMagic(rng);
 			}
 
+			if (flags.Entrances && flags.Treasures && flags.NPCItems)
+			{
+				overworldMap.ShuffleEntrances(rng);
+			}
+
+			if (flags.Floors)
+			{ 
+				ShuffleFloors(rng);
+			}
+
+			var incentivesData = new IncentiveData(rng, flags, overworldMap.MapLocationRequirements);
+			
 			if (flags.Shops)
 			{
 				var excludeItemsFromRandomShops = flags.Treasures

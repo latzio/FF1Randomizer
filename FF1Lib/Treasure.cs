@@ -239,7 +239,7 @@ namespace FF1Lib
 		private void MoveShipToRewardSource(IRewardSource source)
 		{
 			Blob location = null;
-			if (!ItemLocations.ShipLocations.TryGetValue(source.MapLocation, out location))
+			//if (!ItemLocations.ShipLocations.TryGetValue(source.MapLocation, out location))
 			{
 				location = Dock.Coneria;
 			}

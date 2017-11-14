@@ -83,9 +83,9 @@ namespace FF1Lib
 
 		[FlagString(Character = OVERWORLD_MAP, FlagBit = 1)]
 		public bool MapOpenProgression { get; set; }
-		[FlagString(Character = STANDARD_MAPS, FlagBit = 2)]
+		[FlagString(Character = OVERWORLD_MAP, FlagBit = 2)]
 		public bool Entrances { get; set; } // Planned x.x feature - non-town entrance shuffle
-		[FlagString(Character = STANDARD_MAPS, FlagBit = 4)]
+		[FlagString(Character = OVERWORLD_MAP, FlagBit = 4)]
 		public bool Towns { get; set; } // Planned x.x feature - town entrance shuffle
 
 		[FlagString(Character = INCENTIVES_MAIN, FlagBit = 1)]
