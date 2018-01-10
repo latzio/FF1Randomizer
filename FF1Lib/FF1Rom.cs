@@ -159,6 +159,11 @@ namespace FF1Lib
 				ShuffleSurpriseBonus(rng);
 			}
 
+			if (flags.EnemyFormationsFrequency)
+			{
+				ShuffleEnemyFormations(rng);
+			}
+
 			if (flags.OrdealsPillars)
 			{
 				ShuffleOrdeals(rng);
@@ -294,6 +299,7 @@ namespace FF1Lib
 
 			WriteSeedAndFlags(Version, seed.ToHex(), Flags.EncodeFlagsText(flags));
 			ExtraTrackingAndInitCode();
+			
 		}
 		private void ExtraTrackingAndInitCode()
 		{
