@@ -44,10 +44,11 @@
 	<div class="tab-content clearfix" style="height: 500px">
 		<div class="section tab-pane active" id="shuffle">
 			<div class="col-xs-4">
-                <div class="checkbox-cell"><input v-model="Shops" type="checkbox" asp-for="Flags.Shops" /> <label asp-for="Flags.Shops"></label></div>
+				<div class="checkbox-cell"><input v-model="Shops" type="checkbox" asp-for="Flags.Shops" /> <label asp-for="Flags.Shops"></label></div>
 				<div class="checkbox-cell"><input v-model="MagicShops" type="checkbox" asp-for="Flags.MagicShops" /> <label asp-for="Flags.MagicShops">Magic Shops</label></div>
 				<div class="checkbox-cell"><input v-model="MagicLevels" type="checkbox" asp-for="Flags.MagicLevels" /> <label asp-for="Flags.MagicLevels">Magic Levels</label></div>
 				<div class="checkbox-cell" v-if="MagicLevels"><input v-model="MagicPermissions" class="indent" type="checkbox" asp-for="Flags.MagicPermissions" /> <label asp-for="Flags.MagicPermissions">Keep Permissions</label></div>
+				<div class="checkbox-cell"><input v-model="ShardHunt" type="checkbox" asp-for="Flags.ShardHunt" /> <label asp-for="Flags.ShardHunt">Shard Hunt ALPHA</label></div>
 			</div>
 			<div class="col-xs-4">
 				<div class="checkbox-cell"><input v-model="EnemyScripts" type="checkbox" asp-for="Flags.EnemyScripts" /> <label asp-for="Flags.EnemyScripts">Enemy Scripts <b v-if="EnemyScripts" title="Risks 9 Pirates with THUNDER, etc. blocking early progression" style="color:orange">⚠</b></label></div>
