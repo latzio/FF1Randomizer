@@ -9,6 +9,7 @@ namespace FF1Lib
 	{
 		public const int TreasureOffset = 0x03100;
 		public const int TreasureSize = 1;
+		public const int TreasurePoolCount = 256;
 		public const int TreasureCount = 256;
 
 		public const int lut_MapObjTalkJumpTblAddress = 0x390D3;
@@ -42,6 +43,12 @@ namespace FF1Lib
 			var treasureBlob = Get(TreasureOffset, TreasureSize * TreasureCount);
 			var treasurePool = UsedTreasureIndices.Select(x => (Item)treasureBlob[x])
 							.Concat(ItemLists.AllNonTreasureChestItems).ToList();
+
+			if (flags.OrbHunt)
+			{
+				treasurePool = treasurePool.Select(OrbHuntTreasureSelector).ToList();
+				System.Diagnostics.Debug.Assert(treasurePool.Count(item => item == Item.Shard) == TotalOrbsToInsert);
+			}
 
 			var placedItems =
 				ItemPlacement.PlaceSaneItems(rng,
@@ -253,7 +260,7 @@ namespace FF1Lib
 			// New "GiveReward" routine
 			const string checkItem =
 				"85616920C93CB013AAC90CD005" +
-				"DE0060B003FE0060C936B02A902B"; // 27 bytes
+				"DE0060B003FE0060C931B02A902B"; // 27 bytes
 			const string notItem =
 				"A561C96C900920B9EC20EADD4CD6DD" +
 				"C944B0092034DDB007A9E59007" +

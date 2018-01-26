@@ -29,7 +29,7 @@ namespace FF1Lib
 				ItemLists.AllQuestItems
 					.Where(x => !incentivePool.Contains(x) &&
 								x != Item.Ship && x != Item.Bridge && x != Item.Bottle &&
-								!forcedItems.Any(y => y.Item == x));
+								!forcedItems.Any(y => y.Item == x)).ToList();
 
 			var treasurePool = allTreasures.ToList();
 			treasurePool.Remove(Item.Bridge);
@@ -46,6 +46,10 @@ namespace FF1Lib
 			foreach (var questItem in unincentivizedQuestItems)
 			{
 				treasurePool.Remove(questItem);
+			}
+			while (treasurePool.Remove(Item.Shard))
+			{
+				unincentivizedQuestItems.Add(Item.Shard);
 			}
 			do
 			{

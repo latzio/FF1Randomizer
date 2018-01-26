@@ -89,9 +89,11 @@ namespace FF1Lib
 			EasterEggs();
 			DynamicWindowColor();
 			PermanentCaravan();
+			ShiftEarthOrbDown();
+
 			var map = new OverworldMap(this, flags);
 			var shopItemLocation = ItemLocations.CaravanItemShop1;
-			
+
 			if (flags.ModernBattlefield)
 			{
 				SetBattleUI(true);
@@ -121,6 +123,10 @@ namespace FF1Lib
 				if (flags.NPCItems)
 				{
 					CanalIsActuallyABridge();
+				}
+				if (flags.OrbHunt)
+				{
+					EnableOrbHunt(rng);
 				}
 			}
 

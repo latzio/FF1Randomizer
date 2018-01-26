@@ -132,7 +132,7 @@ namespace FF1Lib
 			}
 			if (flags.IncentivizeBad)
 			{
-				incentivePool.Add(Item.Cloth);
+				incentivePool.Add(Item.Gold10);
 			}
 
 			var incentiveLocationPool = new List<IRewardSource>();

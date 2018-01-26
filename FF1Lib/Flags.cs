@@ -63,6 +63,7 @@ namespace FF1Lib
 	{
 		bool Treasures { get; }
 		bool NPCItems { get; }
+		bool OrbHunt { get; }
 		bool EarlyRod { get; }
 		bool EarlyCanoe { get; }
 		bool EarlyOrdeals { get; }
@@ -84,6 +85,8 @@ namespace FF1Lib
 		public bool NPCItems { get; set; }
 		[FlagString(Character = 0, FlagBit = 4)]
 		public bool Shops { get; set; }
+		[FlagString(Character = 0, FlagBit = 8)]
+		public bool OrbHunt { get; set; }
 
 		[FlagString(Character = 1, FlagBit = 1)]
 		public bool EarlyRod { get; set; }
