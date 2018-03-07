@@ -117,9 +117,10 @@ namespace FF1Lib
 			{
 				var incentivesData = new IncentiveData(flags, map.MapLocationRequirements);
 				var placements = ShuffleTreasures(rng, flags, incentivesData, shopItemLocation, map.MapLocationRequirements);
-				if (IsCanalSoftLockPossible(placements, flags.MapVolcanoIceRiver, flags.MapConeriaDwarves))
+
+				if (flags.NPCItems)
 				{
-					map.MapEditsToApply.Add(OverworldMap.CanalSoftLockMountain);
+					CanalIsActuallyABridge();
 				}
 			}
 
@@ -374,6 +375,9 @@ namespace FF1Lib
 
 			// Move DrawCommandMenu out of Bank F so we can add no Escape to it
 			PutInBank(0x0F, 0x8740, Blob.FromHex("A000A200B91BFA9D9E6AE8C01BD015AD916D2901F00EA9139D9E6AE8C8A9F79D9E6AE8C8E005D0052090F6A200C8C01ED0D260"));
+
+			// Create a clone of IsOnBridge that checks the canal too.
+			PutInBank(0x0F, 0x8780, Blob.FromHex("AD0860F014A512CD0960D00DA513CD0A60D006A90085451860A512CD0D60D00DA513CD0E60D006A900854518603860"));
 		}
 
 		public override bool Validate()
