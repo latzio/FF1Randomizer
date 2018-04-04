@@ -71,12 +71,14 @@ namespace FF1Lib
 				placedItems = placedItems.Select(x => x.Item != Item.Floater ? x : ItemPlacement.NewItemPlacement(x, ReplacementItem)).ToList();
 			}
 			
-			// Output the results tothe ROM
+			// Output the results to the ROM
 			foreach (var item in placedItems.Where(x => !x.IsUnused && x.Address < 0x80000 && (!vanillaNPCs || x is TreasureChest)))
 			{
 				//Debug.WriteLine(item.SpoilerText);
 				item.Put(this);
 			}
+
+			MoveShipToRewardSource(placedItems.Find(reward => reward.Item == Item.Ship));
 			return placedItems;
 		}
 
@@ -232,6 +234,47 @@ namespace FF1Lib
 				$"{checkItem}{notItem}{openChest}";
 			Put(0x7DD93, Blob.FromHex(giveRewardRoutine));
 			// See source: ~/asm/1F_DD78_OpenTreasureChestRewrite.asm
+		}
+
+		private void MoveShipToRewardSource(IRewardSource source)
+		{
+			byte x = 0, y = 0;
+			switch (source.MapLocation)
+			{
+				case MapLocation.ElflandCastle:
+				case MapLocation.ElflandTown:
+				case MapLocation.MarshCave:
+				case MapLocation.NorthwestCastle:
+				case MapLocation.CresentLake:
+				case MapLocation.GurguVolcano:
+					x = 0x8D;
+					y = 0xD3;
+					break;
+				case MapLocation.DwarfCave:
+					x = 0x79;
+					y = 0x8B;
+					break;
+				case MapLocation.MatoyasCave:
+					x = 0x9E;
+					y = 0x8E;
+					break;
+				case MapLocation.Pravoka:
+				case MapLocation.IceCave:
+					x = 0xD2;
+					y = 0x99;
+					break;
+				case MapLocation.ConeriaCastle:
+				case MapLocation.ConeriaTown:
+				case MapLocation.TempleOfFiends:
+				default:
+					x = 0x98;
+					y = 0xA9;
+					break;
+			}
+
+			System.Diagnostics.Debug.Assert(x != 0 && y != 0);
+			Data[0x3001] = x;
+			Data[0x3002] = y;
 		}
 	}
 }
