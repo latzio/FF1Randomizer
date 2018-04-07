@@ -326,15 +326,14 @@ namespace FF1Lib
 			{MapLocation.Cardia4, new List<MapChange>{ MapChange.Airship }},
 			{MapLocation.Cardia5, new List<MapChange>{ MapChange.Airship }},
 			{MapLocation.Cardia6, new List<MapChange>{ MapChange.Airship }},
-      // Since caravan item can be placed in any item shop later in the logic, it could end up at Onrac
-      {MapLocation.Caravan, new List<MapChange>{ AirshipAndCanoe }},
+			// Since caravan item can be placed in any item shop later in the logic, it could end up at Onrac
+			{MapLocation.Caravan, new List<MapChange>{ AirshipAndCanoe }},
 			{MapLocation.Gaia, new List<MapChange>{ MapChange.Airship }},
 			{MapLocation.Onrac, new List<MapChange>{ AirshipAndCanoe }},
 			{MapLocation.Waterfall, new List<MapChange>{ AirshipAndCanoe }},
 			{MapLocation.Lefein, new List<MapChange>{ MapChange.Airship }},
 			{MapLocation.MirageTower, new List<MapChange>{ MapChange.Chime | MapChange.Airship }},
 			{MapLocation.BridgeLocation, new List<MapChange>{ MapChange.None }},
-			{MapLocation.ShipLocation, new List<MapChange>{ MapChange.Bridge }},
 			{MapLocation.CanalLocation, new List<MapChange>{ MapChange.Ship }},
 			{MapLocation.AirshipLocation, new List<MapChange>{ ShipAndCanoe }}
 		};

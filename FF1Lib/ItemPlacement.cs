@@ -18,8 +18,8 @@ namespace FF1Lib
 			long sanityCounter = 0;
 			List<IRewardSource> placedItems;
 			
-			var canObsoleteBridge = flags.MapCanalBridge && flags.MapConeriaDwarves;
-			var canObsoleteShip = flags.MapCanalBridge ? (flags.MapConeriaDwarves || flags.MapVolcanoIceRiver) : (flags.MapConeriaDwarves && flags.MapVolcanoIceRiver);
+			var canoeObsoletesBridge = flags.MapCanalBridge && flags.MapConeriaDwarves;
+			var canoeObsoletesShip = flags.MapCanalBridge ? (flags.MapConeriaDwarves || flags.MapVolcanoIceRiver) : (flags.MapConeriaDwarves && flags.MapVolcanoIceRiver);
 			var incentiveLocationPool = incentivesData.IncentiveLocations.ToList();
 			var incentivePool = incentivesData.IncentiveItems.Where(x => allTreasures.Contains(x)).ToList();
 			var forcedItems = incentivesData.ForcedItemPlacements.ToList();
@@ -103,7 +103,28 @@ namespace FF1Lib
 					var earlyKeyAvailable = placedItems.Any(x => x.Item == Item.Key && earlyMapLocations.Contains(x.MapLocation));
 
 					// 4. Place Bridge and Ship next since the valid location lists are so small, unless canoe is available and map edits are applied
-					if (!startingCanoeAvailable || !canObsoleteBridge)
+					if (!earlyCanoeAvailable || !canoeObsoletesShip)
+					{
+						var remainingShipLocations =
+							shipLocations
+								.Where(x => !placedItems.Any(y => y.Address == x.Address) &&
+										(earlyKeyAvailable || !x.AccessRequirement.HasFlag(AccessRequirement.Key)))
+								.ToList();
+						if (!remainingShipLocations.Any()) continue;
+						if (incentives.Remove(Item.Ship) && remainingShipLocations.Any(x => incentiveLocationPool.Any(y => y.Address == x.Address)))
+						{
+							remainingShipLocations =
+								remainingShipLocations
+									.Where(x => incentiveLocationPool.Any(y => y.Address == x.Address))
+									.ToList();
+						}
+						nonincentives.Remove(Item.Ship);
+						placedItems.Add(NewItemPlacement(remainingShipLocations.PickRandom(rng), Item.Ship));
+					}
+					
+					var startingShipAvailable = placedItems.Any(x => x.Item == Item.Ship && startingMapLocations.Contains(x.MapLocation));
+					
+					if (!(startingCanoeAvailable && canoeObsoletesBridge) && !startingShipAvailable)
 					{
 						var startingKeyAvailable = earlyKeyAvailable && placedItems.Any(x => x.Item == Item.Key && startingMapLocations.Contains(x.MapLocation));
 
@@ -122,25 +143,6 @@ namespace FF1Lib
 						}
 						nonincentives.Remove(Item.Bridge);
 						placedItems.Add(NewItemPlacement(remainingBridgeLocations.PickRandom(rng), Item.Bridge));
-					}
-					
-					if (!earlyCanoeAvailable || !canObsoleteShip)
-					{
-						var remainingShipLocations =
-							shipLocations
-								.Where(x => !placedItems.Any(y => y.Address == x.Address) &&
-										(earlyKeyAvailable || !x.AccessRequirement.HasFlag(AccessRequirement.Key)))
-								.ToList();
-						if (!remainingShipLocations.Any()) continue;
-						if (incentives.Remove(Item.Ship) && remainingShipLocations.Any(x => incentiveLocationPool.Any(y => y.Address == x.Address)))
-						{
-							remainingShipLocations =
-								remainingShipLocations
-									.Where(x => incentiveLocationPool.Any(y => y.Address == x.Address))
-									.ToList();
-						}
-						nonincentives.Remove(Item.Ship);
-						placedItems.Add(NewItemPlacement(remainingShipLocations.PickRandom(rng), Item.Ship));
 					}
 				}
 
@@ -281,8 +283,7 @@ namespace FF1Lib
 					currentItems.Contains(Item.Canoe))
 					currentMapChanges |= MapChange.Canoe;
 				if (!currentMapChanges.HasFlag(MapChange.Ship) &&
-					currentItems.Contains(Item.Ship) &&
-					currentMapLocations().Contains(MapLocation.ShipLocation))
+					currentItems.Contains(Item.Ship))
 					currentMapChanges |= MapChange.Ship;
 				if (!currentAccess.HasFlag(AccessRequirement.Tnt) &&
 					currentItems.Contains(Item.Tnt))
