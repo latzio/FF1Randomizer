@@ -8,7 +8,7 @@ namespace FF1Lib
 	public enum MapIndex : byte
 	{
 		ConeriaTown = 0,
-		Provoka = 1,
+		Pravoka = 1,
 		Elfland = 2,
 		Melmond = 3,
 		CrescentLake = 4,
@@ -46,7 +46,7 @@ namespace FF1Lib
 		GurguVolcanoB5 = 36,
 		IceCaveB2 = 37,
 		IceCaveB3 = 38,
-		BahamutsRoomB2 = 39,
+		BahamutCaveB2 = 39,
 		MirageTower2F = 40,
 		MirageTower3F = 41,
 		SeaShrineB5 = 42,
@@ -74,7 +74,7 @@ namespace FF1Lib
 	{
 		Town = 0,
 		Castle = 1,
-		EarthFire = 2,
+		EarthFireTitans = 2,
 		IceCardiaWaterfall = 3,
 		MirageMarsh = 4,
 		SeaShrine = 5,
@@ -151,7 +151,7 @@ namespace FF1Lib
 	}
 
 	public enum OverworldExit : byte
-	{ 
+	{
 		ExitTitanE = 0,
 		ExitTitanW = 1,
 		ExitIceCave = 2,
@@ -160,7 +160,7 @@ namespace FF1Lib
 		ExitEarthCave = 5,
 		ExitGurguVolcano = 6,
 		ExitSeaShrine = 7,
-		ExitSkyCastle = 8,
+		ExitSkyPalace = 8,
 		ExitUnused1 = 9,
 		ExitUnused2 = 10,
 		ExitUnused3 = 11,
@@ -170,7 +170,8 @@ namespace FF1Lib
 		ExitUnused7 = 15,
 	}
 
-	public class FloorDestination
+	// Dead end with no point of egress beyond a possible WARP back to where you entered.
+	public class Floor
 	{
 		public MapLocation Location { get; set; }
 		public MapIndex Index { get; set; }
@@ -179,202 +180,145 @@ namespace FF1Lib
 		public byte CoordinateX { get; set; }
 		public byte CoordinateY { get; set; }
 
-		public FloorDestination(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y)
+		public List<IRewardSource> Rewards;
+
+		public static Floor Create(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y)
+		{
+			return new Floor(location, index, tileset, x, y);
+		}
+
+		public static Floor Create(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, OverworldExit exit)
+		{
+			return new ExitFloor(location, index, tileset, x, y, exit);
+		}
+
+		public static Floor Create(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, Teleporter teleporter, AccessRequirement requirement = AccessRequirement.None)
+		{
+			return new CommonFloor(location, index, tileset, x, y, teleporter, requirement);
+		}
+
+		public static Floor Create(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, Teleporter teleporter, Teleporter teleporter2)
+		{
+			return new ForkedFloor(location, index, tileset, x, y, teleporter, teleporter2);
+		}
+
+		public Floor(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y)
 		{
 			Location = location;
 			Index = index;
 			Tileset = tileset;
 			CoordinateX = x;
-			CoordinateY = y;			
+			CoordinateY = y;
 		}
-	}
 
-	public abstract class TeleporterBase
-	{
-		public Floor Destination;
-
-		public abstract void Write(NesRom rom);
-	}
-
-	public class FloorTeleporter : TeleporterBase
-	{
-		private int TeleporterMapIndexOffset = 0x2D80;
-		private int TeleporterXCoordOffset = 0x2D00;
-		private int TeleporterYCoordOffset = 0x2D40;
-	
-		public Teleporter Teleporter { get; }
-		public AccessRequirement AccessRequirement { get; }
-
-		public FloorTeleporter(Teleporter teleporter, AccessRequirement requirement = AccessRequirement.None)
+		// Since walking the floors recusively destroys the list we copy it here.
+		public static void WriteListToRom(NesRom rom, List<Floor> floors)
 		{
-			Destination = null;
-			Teleporter = teleporter;
-			AccessRequirement = requirement;
+			List<Floor> copy = new List<Floor>(floors);
+			Floor first = copy[0];
+			copy.RemoveAt(0);
+			first.WriteToRom(rom, copy);
 		}
 
-		public override void Write(NesRom rom)
+		public virtual void WriteToRom(NesRom rom, List<Floor> next)
 		{
-			rom.Put(TeleporterMapIndexOffset + (int)Teleporter, new byte[] { (byte)Destination.EntryPoint.Index });
-			rom.Put(TeleporterXCoordOffset + (int)Teleporter, new byte[] { Destination.EntryPoint.CoordinateX });
-			rom.Put(TeleporterYCoordOffset + (int)Teleporter, new byte[] { Destination.EntryPoint.CoordinateY });
+		}
+
+		public static void PrintList(List<Floor> floors)
+		{
+			System.Diagnostics.Debug.Write("FLOOR LIST BEGIN: { ");
+			floors.ForEach(floor => floor.Print());
+			System.Diagnostics.Debug.WriteLine("");
+		}
+
+		public virtual void Print()
+		{
+			System.Diagnostics.Debug.Write($"{Enum.GetName(typeof(MapIndex), Index)} [{CoordinateX}, {CoordinateY}] {'}'} ");
 		}
 	}
 
-	public class DungeonExit : TeleporterBase
+	// A final floor with one point of egress to the overworld
+	public class ExitFloor : Floor
 	{
 		public OverworldExit Exit { get; }
 
-		public DungeonExit(OverworldExit exit)
+		public ExitFloor(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, OverworldExit exit)
+			: base(location, index, tileset, x, y)
 		{
 			Exit = exit;
 		}
 
-		public override	void Write(NesRom rom)
+		public override void WriteToRom(NesRom rom, List<Floor> floors)
 		{
-			// This needs to do the thing.
+			base.WriteToRom(rom, floors);
+		}
+
+		public override void Print()
+		{
+			System.Diagnostics.Debug.Write($"{Enum.GetName(typeof(MapIndex), Index)} [{CoordinateX}, {CoordinateY}] -> EXIT {'}'}");
 		}
 	}
 
-	public class Floor
+	// A common floor with one point of egress to another floor.
+	public class CommonFloor : Floor
 	{
-		public FloorDestination EntryPoint;
-		public Floor Parent;
+		private const int TeleporterMapIndexOffset = 0x2D80;
+		private const int TeleporterXCoordOffset = 0x2D00;
+		private const int TeleporterYCoordOffset = 0x2D40;
 
-		public List<TeleporterBase> Exits;
-		public List<IRewardSource> Rewards;
+		public Teleporter Teleporter { get; protected set; }
+		public AccessRequirement AccessRequirement { get; }
 
-		public Floor(FloorDestination entryPoint, Floor parent, TeleporterBase primaryExit = null, TeleporterBase secondaryExit = null)
+		public CommonFloor(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, Teleporter teleporter, AccessRequirement accessRequirement = AccessRequirement.None)
+			: base(location, index, tileset, x, y)
 		{
-			EntryPoint = entryPoint;
-			Parent = parent;
-			if (Parent != null)
-			{
-				Parent.Exits.Find(exit => exit.Destination == null).Destination = this;
-			}
-
-			Exits = new List<TeleporterBase>();
-			if (primaryExit != null)
-			{
-				Exits.Add(primaryExit);
-			}
-			if (secondaryExit != null)
-			{
-				Exits.Add(secondaryExit);
-			}
-
+			Teleporter = teleporter;
 		}
 
-		public void SwapWith(Floor other)
+		public override void WriteToRom(NesRom rom, List<Floor> floors)
 		{
-			if (this == other)
-			{
-				return;
-			}
+			base.WriteToRom(rom, floors);
 
-			if (Parent == other)
-			{
-				other.SwapWith(this);
-				return;
-			}
+			Floor next = floors[0];
+			floors.RemoveAt(0);
+			rom.Put(TeleporterMapIndexOffset + (int)Teleporter, new byte[] { (byte)next.Index });
+			rom.Put(TeleporterXCoordOffset + (int)Teleporter, new byte[] { next.CoordinateX });
+			rom.Put(TeleporterYCoordOffset + (int)Teleporter, new byte[] { next.CoordinateY });
 
-			if (Exits.Count != other.Exits.Count)
-			{
-				throw new Exception("Mismatched floors.");
-			}
-
-			// Other can still be my child but not the other way around.
-			var oldParent = Parent;
-			var oldParentExit = oldParent == null ? null : Parent.Exits.Find(exit => exit.Destination == this);
-
-			var newParent = other.Parent == this ? other : other.Parent;
-
-			// Traditional case when we're unrelated
-			if (newParent != other)
-			{
-				// Swap parents' destinations
-				var newParentExit = newParent == null ? null : newParent.Exits.Find(exit => exit.Destination == other);
-				if (newParentExit != null)
-				{
-					newParentExit.Destination = this;
-				}
-
-				if (oldParentExit != null)
-				{
-					oldParentExit.Destination = other;
-				}
-
-				// Swap parents
-				Parent = newParent;
-				other.Parent = oldParent;
-
-				// Swap destinations
-				if (Exits.Count > 0)
-				{
-					var myOldDestination = Exits[0].Destination;
-					Exits[0].Destination = other.Exits[0].Destination;
-					if (Exits[0].Destination != null)
-					{ 
-						Exits[0].Destination.Parent = this;
-					}
-
-					other.Exits[0].Destination = myOldDestination;
-					if (other.Exits[0].Destination != null)
-					{
-						other.Exits[0].Destination.Parent = other;
-					}
-				}
-				
-			}
-			else // Other is my child and is going to become my parent
-			{
-				// Update my parent's destinations
-				if (oldParentExit != null)
-				{
-					oldParentExit.Destination = other;
-				}
-
-				// Swap "parents"
-				other.Parent = Parent;
-				Parent = other;
-
-				if (Exits.Count > 0)
-				{
-					Exits[0].Destination = other.Exits[0].Destination;
-					if (Exits[0].Destination != null)
-					{
-						Exits[0].Destination.Parent = this;
-					}
-
-					other.Exits[0].Destination = this;
-				}
-			}
-
-
+			next.WriteToRom(rom, floors);
 		}
 
-		public void write(NesRom rom)
+		public override void Print()
 		{
-			Exits.ForEach(exit =>
-			{
-				if (exit.Destination != null)
-				{
-					exit.Destination.write(rom);
-				}
-			});
+			System.Diagnostics.Debug.Write($"{Enum.GetName(typeof(MapIndex), Index)} [{CoordinateX}, {CoordinateY}] -> ");
+		}
+	}
+
+	// A two-of-a-kind floor with two point of egress to other floors.
+	public class ForkedFloor : CommonFloor
+	{
+		public Teleporter Teleporter2 { get; protected set; }
+
+		public ForkedFloor(MapLocation location, MapIndex index, Tileset tileset, byte x, byte y, Teleporter teleporter, Teleporter teleporter2)
+			: base(location, index, tileset, x, y, teleporter)
+		{
+			Teleporter2 = teleporter2;
 		}
 
-		public void print(string indentation = "")
+		public override void WriteToRom(NesRom rom, List<Floor> floors)
 		{
-			System.Diagnostics.Debug.WriteLine($"{indentation} -> {Enum.GetName(typeof(MapIndex), EntryPoint.Index)} [{EntryPoint.CoordinateX}, {EntryPoint.CoordinateY}]");
-			Exits.ForEach(exit =>
-			{
-				if (exit.Destination != null)
-				{
-					exit.Destination.print(indentation + "\t");
-				}
-			});
+			// This will do the first branch using Teleporter, removing all the floors from floors until the first end.
+			// Then we repeat the CommonFloor logic with the old Teleporter switcheroo.
+			base.WriteToRom(rom, floors);
+			(Teleporter, Teleporter2) = (Teleporter2, Teleporter);
+			base.WriteToRom(rom, floors);
+			(Teleporter, Teleporter2) = (Teleporter2, Teleporter);
 		}
 
+		public override void Print()
+		{
+			System.Diagnostics.Debug.Write($"{Enum.GetName(typeof(MapIndex), Index)} [{CoordinateX}, {CoordinateY}] -> {'{'} Branch: ");
+		}
 	}
 
 }
