@@ -22,10 +22,10 @@ namespace FF1Lib
 
 			// Castles (Entirely not Floor Shuffled yet...)
 			var ConeriaCastle = Floor.Create(MapLocation.ConeriaCastle, MapIndex.ConeriaCastle1F, Tileset.Castle, 12, 35, OverworldExit.ExitCastleConeria);
-			var ElflandCastle = Floor.Create(MapLocation.ElflandCastle, MapIndex.ConeriaCastle1F, Tileset.Castle, 16, 31);
-			var NorthwestCastle = Floor.Create(MapLocation.NorthwestCastle, MapIndex.ConeriaCastle1F, Tileset.Castle, 22, 24);
-			var CastleOrdeals = Floor.Create(MapLocation.CastleOrdeals, MapIndex.ConeriaCastle1F, Tileset.Castle, 12, 21, OverworldExit.ExitCastleConeria);
-			var TempleOfFiends = Floor.Create(MapLocation.TempleOfFiends, MapIndex.ConeriaCastle1F, Tileset.SeaShrine, 20, 30);
+			var ElflandCastle = Floor.Create(MapLocation.ElflandCastle, MapIndex.ElflandCastle, Tileset.Castle, 16, 31);
+			var NorthwestCastle = Floor.Create(MapLocation.NorthwestCastle, MapIndex.NorthwestCastle, Tileset.Castle, 22, 24);
+			var CastleOrdeals = Floor.Create(MapLocation.CastleOrdeals, MapIndex.CastleOrdeals1F, Tileset.Castle, 12, 21, OverworldExit.ExitCastleOrdeals);
+			var TempleOfFiends = Floor.Create(MapLocation.TempleOfFiends, MapIndex.TemploOfFiends, Tileset.SeaShrine, 20, 30);
 
 			// Ice Cave / Cardia / Waterfall Tileset
 			var DwarfCave = Floor.Create(MapLocation.DwarfCave, MapIndex.ConeriaTown, Tileset.IceCardiaWaterfall, 22, 11);
