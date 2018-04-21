@@ -67,6 +67,11 @@ namespace FF1Lib
 		public static OWTeleportLocation Cardia6 = new OWTeleportLocation(OverworldTeleportIndex.Cardia6, 116, 66, EntranceTeleports.Cardia6); // (chests 1, 2, 3, 4, 5, 12, and 13)
 		public static OWTeleportLocation Unused1 = new OWTeleportLocation(OverworldTeleportIndex.Unused1, 0, 0, EntranceTeleports.Empty);
 		public static OWTeleportLocation Unused2 = new OWTeleportLocation(OverworldTeleportIndex.Unused2, 0, 0, EntranceTeleports.Empty);
+		public static IReadOnlyCollection<OWTeleportLocation> AllTownLocations =
+			new List<OWTeleportLocation>
+			{
+			ConeriaTown,Pravoka,ElflandTown,Melmond,CresentLake,Gaia,Onrac,Lefein
+		};
 		public static IReadOnlyCollection<OWTeleportLocation> AllNonTownLocations =
 			new List<OWTeleportLocation>
 			{

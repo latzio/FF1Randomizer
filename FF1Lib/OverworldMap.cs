@@ -94,7 +94,7 @@ namespace FF1Lib
 			_rom[teleportExitYOffset + teleport.PlacedTeleport.ExitIndex] = teleport.CoordinateY;
 		}
 
-		public void ShuffleEntrances(MT19337 rng)
+		public void ShuffleEntrances(MT19337 rng, bool includeTowns, bool allowUnsafe = false)
 		{
 			// Disable the Princess Warp back to Castle Coneria
 			_rom.Put(0x392CA, Blob.FromHex("EAEAEA"));
@@ -104,6 +104,7 @@ namespace FF1Lib
 			defaultRequirements[MapLocation.TitansTunnelWest] = new List<MapChange> { MapChange.Airship };
 			
 			var maps = TeleportLocations.AllNonTownLocations.Except(TeleportLocations.UnusedLocations).ToList();
+			if (includeTowns) { maps.AddRange(TeleportLocations.AllTownLocations); }
 			var mapCount = maps.Count;
 			var destinations = maps.Select(x => x.PlacedTeleport).ToList();
 			destinations.Shuffle(rng);
@@ -118,11 +119,11 @@ namespace FF1Lib
 			do
 			{
 				sanity++;
-				maps = TeleportLocations.AllNonTownLocations.Except(TeleportLocations.UnusedLocations).ToList();
+				var shuffleMaps = maps.ToList();
 				shuffled = new List<OWTeleportLocation>();
 				for (byte i = 0; i < mapCount; i++)
-					shuffled.Add(new OWTeleportLocation(maps.SpliceRandom(rng), destinations[i]));
-			} while (!CheckEntranceSanity(shuffled));
+					shuffled.Add(new OWTeleportLocation(shuffleMaps.SpliceRandom(rng), destinations[i]));
+			} while (!CheckEntranceSanity(shuffled, allowUnsafe));
 
 			Console.WriteLine($"\nShuffled Maps after sanity count: {sanity}");
 			foreach (var map in shuffled.OrderBy(x => x.TeleportIndex))
@@ -142,10 +143,14 @@ namespace FF1Lib
 			MapLocationRequirements = newRequirements;
 		}
 		
-		public bool CheckEntranceSanity(IList<OWTeleportLocation> shuffledEntrances) {
+		public bool CheckEntranceSanity(IList<OWTeleportLocation> shuffledEntrances, bool allowUnsafe = false) {
 			var starterDestinations = new List<MapLocation> {
 				MapLocation.TempleOfFiends, MapLocation.Cardia6, MapLocation.Cardia4,
 				MapLocation.Cardia2, MapLocation.MatoyasCave, MapLocation.DwarfCave
+			};
+			var townsWithShops = new List<MapLocation> {
+				MapLocation.ConeriaTown, MapLocation.Pravoka, MapLocation.ElflandTown, 
+				MapLocation.CresentLake, MapLocation.Gaia, MapLocation.Melmond
 			};
 			var invalidBeforeFirstProgressionDestinations = new List<MapLocation> {
 				MapLocation.EarthCave, MapLocation.GurguVolcano, MapLocation.Waterfall,
@@ -153,16 +158,26 @@ namespace FF1Lib
 				MapLocation.IceCave
 			};
 			var connectedLocations = new List<OverworldTeleportIndex> {
-				OverworldTeleportIndex.ConeriaCastle,OverworldTeleportIndex.ElflandCastle,OverworldTeleportIndex.NorthwestCastle,
-				OverworldTeleportIndex.TempleOfFiends,OverworldTeleportIndex.EarthCave,OverworldTeleportIndex.GurguVolcano,
-				OverworldTeleportIndex.IceCave,OverworldTeleportIndex.Cardia1, OverworldTeleportIndex.Cardia3,
-				OverworldTeleportIndex.MatoyasCave,OverworldTeleportIndex.SardasCave,OverworldTeleportIndex.MarshCave,
-				OverworldTeleportIndex.TitansTunnelEast,OverworldTeleportIndex.TitansTunnelWest
+				OverworldTeleportIndex.ConeriaCastle, OverworldTeleportIndex.ConeriaTown, OverworldTeleportIndex.TempleOfFiends,
+				OverworldTeleportIndex.MatoyasCave, OverworldTeleportIndex.Pravoka,
+				OverworldTeleportIndex.ElflandCastle, OverworldTeleportIndex.ElflandTown, OverworldTeleportIndex.NorthwestCastle, OverworldTeleportIndex.MarshCave,
+				OverworldTeleportIndex.Melmond, OverworldTeleportIndex.EarthCave, OverworldTeleportIndex.TitansTunnelEast, 
+				OverworldTeleportIndex.SardasCave, OverworldTeleportIndex.TitansTunnelWest,
+				OverworldTeleportIndex.Cardia1, OverworldTeleportIndex.Cardia3,
+				OverworldTeleportIndex.GurguVolcano, OverworldTeleportIndex.IceCave,
+				OverworldTeleportIndex.Onrac
 			};
-			var starterLocationAtToF = 
-				shuffledEntrances.Any(x => x.TeleportIndex == OverworldTeleportIndex.TempleOfFiends && starterDestinations.Any(y => x.PlacedTeleport.TeleportDestination == y));
+			var startingLocations = new List<OverworldTeleportIndex> {
+				OverworldTeleportIndex.ConeriaCastle, OverworldTeleportIndex.TempleOfFiends
+			};
+			var townStart = 
+				shuffledEntrances.Any(x => x.TeleportIndex == OverworldTeleportIndex.ConeriaTown && townsWithShops.Any(y => x.PlacedTeleport.TeleportDestination == y));
+			var starterLocation = 
+				shuffledEntrances.Any(x => startingLocations.Contains(x.TeleportIndex) && starterDestinations.Any(y => x.PlacedTeleport.TeleportDestination == y));
 			var dangerLocationAtConeriaCastle = 
 				shuffledEntrances.Any(x => x.TeleportIndex == OverworldTeleportIndex.ConeriaCastle && invalidBeforeFirstProgressionDestinations.Any(y => x.PlacedTeleport.TeleportDestination == y));
+			var dangerLocationAtToF = 
+				shuffledEntrances.Any(x => x.TeleportIndex == OverworldTeleportIndex.TempleOfFiends && invalidBeforeFirstProgressionDestinations.Any(y => x.PlacedTeleport.TeleportDestination == y));
 			var dangerLocationAtDwarf = 
 				shuffledEntrances.Any(x => x.TeleportIndex == OverworldTeleportIndex.DwarfCave && invalidBeforeFirstProgressionDestinations.Any(y => x.PlacedTeleport.TeleportDestination == y));
 			var dangerLocationAtMatoya = 
@@ -173,8 +188,9 @@ namespace FF1Lib
 			var titanDirection =
 				shuffledEntrances.First(x => x.PlacedTeleport.TeleportDestination == MapLocation.TitansTunnelWest).CoordinateX <=
 				shuffledEntrances.First(x => x.PlacedTeleport.TeleportDestination == MapLocation.TitansTunnelEast).CoordinateX;
+			var dangerDanger = dangerLocationAtConeriaCastle || dangerLocationAtToF || dangerLocationAtDwarf || dangerLocationAtMatoya;
 				
-			return starterLocationAtToF && titansConnections && titanDirection && !dangerLocationAtConeriaCastle && !dangerLocationAtDwarf && !dangerLocationAtMatoya;
+			return townStart && starterLocation && titansConnections && titanDirection && (allowUnsafe || !dangerDanger);
 		}
 		
 		public Dictionary<MapLocation, List<MapChange>> MapLocationRequirements;

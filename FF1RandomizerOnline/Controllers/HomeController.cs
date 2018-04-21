@@ -52,6 +52,7 @@ namespace FF1RandomizerOnline.Controllers
 					NPCFetchItems = false,
 					
 					Shops = true,
+					RandomWares = true,
 					MagicShops = false,
 					MagicLevels = true,
 					MagicPermissions = false,
@@ -69,7 +70,9 @@ namespace FF1RandomizerOnline.Controllers
 					OrdealsPillars = true,
 					SkyCastle4FTeleporters = true,
 					TitansTrove = true,
-					
+					Entrances = true,
+					Towns = true,
+					Floors = false,
 					MapOpenProgression = false,
 					
 					IncentivizeFreeNPCs = true,

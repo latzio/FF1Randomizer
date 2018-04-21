@@ -120,7 +120,7 @@ namespace FF1Lib
 
 			if (flags.Entrances && flags.Treasures && flags.NPCItems)
 			{
-				overworldMap.ShuffleEntrances(rng);
+				overworldMap.ShuffleEntrances(rng, flags.Towns);
 			}
 
 			if (flags.Floors)
