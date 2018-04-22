@@ -173,6 +173,14 @@ namespace FF1Lib
 	// Dead end with no point of egress beyond a possible WARP back to where you entered.
 	public class Floor
 	{
+		private static int MapPaletteOffset = 0x2000;
+		private static int MapPaletteSize = 48;
+		private static int MapCount = 64;
+
+		private static List<Blob> FloorPalettes;
+		private static Object FloorPalettesLock = new Object();
+
+
 		public MapLocation Location { get; set; }
 		public MapIndex Index { get; set; }
 		public Tileset Tileset { get; set; }
@@ -214,6 +222,15 @@ namespace FF1Lib
 		// Since walking the floors recusively destroys the list we copy it here.
 		public static void WriteListToRom(NesRom rom, List<Floor> floors)
 		{
+			// Just need this lock for the single write to this long lived lookup.
+			lock (FloorPalettesLock)
+			{
+				if (FloorPalettes == null)
+				{
+					FloorPalettes = rom.Get(0x2000, MapCount * MapPaletteSize).Chunk(MapPaletteSize);
+				}
+			}
+
 			List<Floor> copy = new List<Floor>(floors);
 			Floor first = copy[0];
 			copy.RemoveAt(0);
@@ -222,6 +239,10 @@ namespace FF1Lib
 
 		public virtual void WriteToRom(NesRom rom, List<Floor> next)
 		{
+			if (Index >= MapIndex.EarthCaveB1)
+			{
+				//rom.Put(MapPaletteOffset + (int)Index * MapPaletteSize, FloorPalettes[(int)MapIndex.MarshCaveB3]);
+			}
 		}
 
 		public static void PrintList(List<Floor> floors)

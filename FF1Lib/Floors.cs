@@ -7,9 +7,11 @@ namespace FF1Lib
 {
 	public partial class FF1Rom : NesRom
 	{
+		
 
 		public void ShuffleFloors(MT19337 rng)
 		{
+
 			// Towns (Note Onrac is a CommonFloor not a dead end like the others.)
 			var ConeriaTown = Floor.Create(MapLocation.ConeriaTown, MapIndex.ConeriaTown, Tileset.Town, 16, 23);
 			var Pravoka = Floor.Create(MapLocation.Pravoka, MapIndex.Pravoka, Tileset.Town, 19, 32);
@@ -28,9 +30,9 @@ namespace FF1Lib
 			var TempleOfFiends = Floor.Create(MapLocation.TempleOfFiends, MapIndex.TemploOfFiends, Tileset.SeaShrine, 20, 30);
 
 			// Ice Cave / Cardia / Waterfall Tileset
-			var DwarfCave = Floor.Create(MapLocation.DwarfCave, MapIndex.ConeriaTown, Tileset.IceCardiaWaterfall, 22, 11);
-			var MatoyasCave = Floor.Create(MapLocation.MatoyasCave, MapIndex.ConeriaTown, Tileset.IceCardiaWaterfall, 15, 11);
-			var SardasCave = Floor.Create(MapLocation.SardasCave, MapIndex.ConeriaTown, Tileset.IceCardiaWaterfall, 18, 13);
+			var DwarfCave = Floor.Create(MapLocation.DwarfCave, MapIndex.DwarfCave, Tileset.IceCardiaWaterfall, 22, 11);
+			var MatoyasCave = Floor.Create(MapLocation.MatoyasCave, MapIndex.MatoyasCave, Tileset.IceCardiaWaterfall, 15, 11);
+			var SardasCave = Floor.Create(MapLocation.SardasCave, MapIndex.SardasCave, Tileset.IceCardiaWaterfall, 18, 13);
 			var Cardia1 = Floor.Create(MapLocation.Cardia1, MapIndex.Cardia, Tileset.IceCardiaWaterfall, 30, 18);
 			var Cardia2 = Floor.Create(MapLocation.Cardia2, MapIndex.Cardia, Tileset.IceCardiaWaterfall, 12, 15);
 			var BahamutCaveB1 = Floor.Create(MapLocation.Cardia3, MapIndex.BahamutCaveB1, Tileset.IceCardiaWaterfall, 2, 2, Teleporter.BahamutsRoom);
