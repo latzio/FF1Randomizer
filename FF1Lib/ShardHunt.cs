@@ -58,6 +58,7 @@ namespace FF1Lib
 
 			// Hard code the total number of shards and where we start depending on how many are needed
 			int goal = rng.Between(16, 24);
+			goal = 16;
 			String hexCount = goal.ToString("X2");
 			String ppuLowByte = goal <= 24 ? "63" : "43";
 
