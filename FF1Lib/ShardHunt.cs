@@ -44,8 +44,32 @@ namespace FF1Lib
 
 		public void EnableShardHunt(MT19337 rng, List<Map> maps)
 		{
+			var shardNames = new List<string>
+			{
+				"SHARD",
+				"JEWEL",
+				"PIECE",
+				"CHUNK",
+				"PRISM",
+				"STONE",
+				"GEODE",
+				"SLICE",
+				"WEDGE",
+				"BIGGS",
+				"SLIVR",
+				"ORBLT",
+				// Other names that we came up with, but I don't like:
+				//"SHRED",
+				//"GRAIN",
+				//"MINIM",
+				//"STUFF",
+				//"THING",
+				//"TOTEM"
+			};
+			var shardName = shardNames[rng.Between(0, shardNames.Count - 1)];
+
 			// Replace unused CANOE string and EarthOrb pointer with whatever we're calling the scavenged item.
-			Put(0x2B981, FF1Text.TextToBytes("SHARD  ", false, FF1Text.Delimiter.Null));
+			Put(0x2B981, FF1Text.TextToBytes($"{shardName}  ", false, FF1Text.Delimiter.Null));
 			Data[0x2B72A] = 0x81;
 
 			// Now actually print shards when printing items, and print them with quantity
@@ -95,19 +119,19 @@ namespace FF1Lib
 			{
 				"The Time Loop has reopened!", "",
 				"The ORBS have been smashed!", "", "", "",
-				"The resulting SHARDS were", "",
+				$"The resulting {shardName}S were", "",
 				"stolen and scattered around", "",
 				"the world to distract while", "",
 				"this new evil incubates....", "", "", "",
 				"But The Light Warriors return!", "",
-				$"They will need {goal} SHARDS", "",
+				$"They will need {goal} {shardName}S", "",
 				"to restore the BLACK ORB and", "",
 				"confront this new malevolence.",
 			});
 			System.Diagnostics.Debug.Assert(intro.Length <= 208);
 			Put(0x37F20, intro);
-			Put(0x289B2, FF1Text.TextToBytes("The SHARDS coalesce to\nrestore the Black ORB.\n\nBrave Light Warriors....\nDestroy the Evil within!")); // Black Orb Text
-			Put(0x28CF8, FF1Text.TextToBytes("Ah, the Light Warriors!\n\nSo you have collected\nthe SHARDS and restored\nthe BLACK ORB."));
+			Put(0x289B2, FF1Text.TextToBytes($"The {shardName}S coalesce to\nrestore the Black ORB.\n\nBrave Light Warriors....\nDestroy the Evil within!")); // Black Orb Text
+			Put(0x28CF8, FF1Text.TextToBytes($"Ah, the Light Warriors!\n\nSo you have collected\nthe {shardName}S and restored\nthe BLACK ORB."));
 			Put(0x28D57, FF1Text.TextToBytes("Thus you've travelled\n2000 years into the past\nto try to stop me?\n\nStep forward then,\nto your peril!"));
 			Put(0x28DAF, FF1Text.TextToBytes("Oh, Light Warriors!\nSuch arrogant bravery.\n\nLet us see whom history\nremembers. En Garde!"));
 
