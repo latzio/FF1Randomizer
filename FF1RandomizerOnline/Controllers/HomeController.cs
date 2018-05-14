@@ -52,6 +52,7 @@ namespace FF1RandomizerOnline.Controllers
 					NPCFetchItems = false,
 					
 					Shops = true,
+					RandomWares = true,
 					MagicShops = false,
 					MagicLevels = true,
 					MagicPermissions = false,
@@ -69,18 +70,21 @@ namespace FF1RandomizerOnline.Controllers
 					OrdealsPillars = true,
 					SkyCastle4FTeleporters = true,
 					TitansTrove = true,
-					
+					Entrances = true,
+					Towns = true,
+					Floors = false,
+					AllowFloorMismatch = true,
 					MapOpenProgression = false,
 					
 					IncentivizeFreeNPCs = true,
-					IncentivizeFetchNPCs = false,
-					IncentivizeFetchItems = false,
+					IncentivizeFetchNPCs = true,
+					IncentivizeFetchItems = true,
 					
-					IncentivizeMarsh = true,
+					IncentivizeMarsh = false,
 					IncentivizeMarshKeyLocked = false,
 					IncentivizeVolcano = false,
-					IncentivizeConeria = true,
-					IncentivizeEarth = true,
+					IncentivizeConeria = false,
+					IncentivizeEarth = false,
 					IncentivizeIceCave = true,
 					IncentivizeOrdeals = true,
 					IncentivizeSeaShrine = false,
@@ -88,8 +92,8 @@ namespace FF1RandomizerOnline.Controllers
 
 					IncentivizeTail = true,
 					IncentivizeMasamune = true,
-					IncentivizeOpal = true,
-					IncentivizeRibbon = true,
+					IncentivizeOpal = false,
+					IncentivizeRibbon = false,
 					IncentivizeRibbon2 = false,
 					Incentivize65K = false,
 					IncentivizeBad = false,
@@ -125,11 +129,16 @@ namespace FF1RandomizerOnline.Controllers
 					EnemyElementalResistancesBug = true,
 					EnemySpellsTargetingAllies = true,
 
+					StartingGold = true,
+					WrapStatOverflow = false,
+					WrapPriceOverflow = false,
+					
 					ForcedPartyMembers = 0,
 					PriceScaleFactor = 3.0,
 					EnemyScaleFactor = 1.5,
 					ExpMultiplier = 2.5,
 					ExpBonus = 250,
+					EncounterRate = 50,
 
 					FunEnemyNames = false,
 					PaletteSwap = false,

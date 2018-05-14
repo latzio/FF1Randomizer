@@ -12,7 +12,7 @@ namespace FF1Lib
 	// ReSharper disable once InconsistentNaming
 	public partial class FF1Rom : NesRom
 	{
-		public const string Version = "2.2.0";
+		public const string Version = "2.3.0";
 
 		public const int RngOffset = 0x7F100;
 		public const int RngSize = 256;
@@ -89,9 +89,9 @@ namespace FF1Lib
 			PermanentCaravan();
 			ShiftEarthOrbDown();
 
-			var overworldMap = new OverworldMap(this, flags);
+			var palettes = OverworldMap.GeneratePalettes(Get(OverworldMap.MapPaletteOffset, MapCount * OverworldMap.MapPaletteSize).Chunk(OverworldMap.MapPaletteSize));
+			var overworldMap = new OverworldMap(this, flags, palettes);
 			var maps = ReadMaps();
-			var incentivesData = new IncentiveData(rng, flags, overworldMap.MapLocationRequirements);
 			var shopItemLocation = ItemLocations.CaravanItemShop1;
 
 			if (flags.ModernBattlefield)
@@ -120,19 +120,6 @@ namespace FF1Lib
 				ShuffleItemMagic(rng);
 			}
 
-			if (flags.Shops)
-			{
-				var excludeItemsFromRandomShops = flags.Treasures
-					? incentivesData.ForcedItemPlacements.Select(x => x.Item).Concat(incentivesData.IncentiveItems).ToList()
-					: new List<Item>();
-				shopItemLocation = ShuffleShops(rng, flags.EnemyStatusAttacks, flags.RandomWares, excludeItemsFromRandomShops);
-			}
-
-			if (flags.Treasures || flags.NPCItems || flags.NPCFetchItems)
-			{
-				ShuffleTreasures(rng, flags, incentivesData, shopItemLocation, overworldMap.MapLocationRequirements);
-			}
-
 			if (flags.Treasures && flags.ShardHunt && !flags.ChaosRush)
 			{
 				EnableShardHunt(rng, flags.ExtraShards ? rng.Between(24, 30) : 16, maps);
@@ -141,6 +128,41 @@ namespace FF1Lib
 			if (flags.TransformFinalFormation)
 			{
 				TransformFinalFormation((FinalFormation)rng.Between(0, Enum.GetValues(typeof(FinalFormation)).Length - 1));
+			}
+			
+			var maxRetries = 500;
+			for (var i = 0; i < maxRetries; i++)
+			{
+				try
+				{
+					overworldMap = new OverworldMap(this, flags, palettes);
+					if ((flags.Entrances || flags.Floors || flags.Towns) && flags.Treasures && flags.NPCItems)
+					{
+						overworldMap.ShuffleEntrancesAndFloors(rng, flags);
+					}
+
+					var incentivesData = new IncentiveData(rng, flags, overworldMap.MapLocationRequirements, overworldMap.FloorLocationRequirements, overworldMap.FullLocationRequirements);
+
+					if (flags.Shops)
+					{
+						var excludeItemsFromRandomShops = flags.Treasures
+							? incentivesData.ForcedItemPlacements.Select(x => x.Item).Concat(incentivesData.IncentiveItems).ToList()
+							: new List<Item>();
+						shopItemLocation = ShuffleShops(rng, flags.EnemyStatusAttacks, flags.RandomWares, excludeItemsFromRandomShops);
+					}
+
+					if (flags.Treasures || flags.NPCItems || flags.NPCFetchItems)
+					{
+						ShuffleTreasures(rng, flags, incentivesData, shopItemLocation, overworldMap.MapLocationRequirements, overworldMap.FloorLocationRequirements, overworldMap.FullLocationRequirements);
+					}
+					break;
+				}
+				catch (InsaneException)
+				{
+					Console.WriteLine("Insane seed. Retrying");
+					if (maxRetries > (i + 1)) continue;
+					throw new InvalidOperationException("Failed Sanity Check too many times");
+				}
 			}
 
 			if (flags.MagicShops)
@@ -307,7 +329,8 @@ namespace FF1Lib
 			var itemText = ReadText(ItemTextPointerOffset, ItemTextPointerBase, ItemTextPointerCount);
 			FixVanillaRibbon(itemText);
 			ExpGoldBoost(flags.ExpBonus, flags.ExpMultiplier);
-			ScalePrices(flags.PriceScaleFactor, flags.ExpMultiplier, flags.VanillaStartingGold, itemText, rng);
+			ScalePrices(flags, itemText, rng);
+			ScaleEncounterRate(flags.EncounterRate / 50.0);
 
 			overworldMap.ApplyMapEdits();
 			WriteMaps(maps);
@@ -316,7 +339,7 @@ namespace FF1Lib
 
 			if (flags.EnemyScaleFactor > 1)
 			{
-				ScaleEnemyStats(flags.EnemyScaleFactor, rng);
+				ScaleEnemyStats(flags.EnemyScaleFactor, flags.WrapStatOverflow, rng);
 			}
 
 			if (flags.ForcedPartyMembers > 0)
@@ -525,6 +548,14 @@ namespace FF1Lib
 			rngTable.Shuffle(rng);
 
 			Put(RngOffset, rngTable.SelectMany(blob => blob.ToBytes()).ToArray());
+		}
+		
+		private void ScaleEncounterRate(double multiplier)
+		{
+			var newRng = Get(RngOffset, RngSize).ToBytes()
+				.Select(x => (byte)(multiplier <= 0.01 ? 240 : Math.Min(240, x / multiplier)))
+				.ToArray();
+			Put(RngOffset, newRng);
 		}
 
 		public void ExpGoldBoost(double bonus, double multiplier)
