@@ -284,4 +284,23 @@ namespace FF1Lib
 		Unused1 = 30,
 		Unused2 = 31
 	}
+	public enum Backdrop : byte
+	{
+		Grass = 0x00,
+		MarshCave = 0x01,
+		Cave = 0x02,
+		Water = 0x03,
+		Forest = 0x04,
+		TempleOfFiends = 0x05,
+		Desert = 0x06,
+		Marsh = 0x07,
+		EarthCave = 0x08,
+		Castle = 0x09,
+		River = 0x0A,
+		Tower = 0x0B,
+		SeaShrine = 0x0C,
+		IceCave	= 0x0D,
+		Volcano	= 0x0E,
+		Waterfall = 0x0F,
+	}
 }
