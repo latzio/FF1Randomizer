@@ -202,6 +202,11 @@ namespace FF1Lib
 			// Disable the Princess Warp back to Castle Coneria
 			_rom.Put(0x392CA, Blob.FromHex("EAEAEA"));
 
+			// Since we're going to move all the entrances around, we're going to change the requirements
+			// for just about everything. Most interestingly the Titan's Tunnel is going to connect totally
+			// different overworld regions, so we need to setup new defaults for Titan's West and Sarda since
+			// though the airship is the only way to those entrances. We will have to go back and calculate
+			// the implications of the Titan's Tunnel later.
 			var defaultRequirements = MapLocationRequirements
 				.ToDictionary(x => x.Key, x => new LocationRequirement(x.Value))
 				.Concat(FloorLocationRequirements.ToDictionary(x => x.Key, x => new LocationRequirement(x.Value)))
@@ -209,11 +214,14 @@ namespace FF1Lib
 			defaultRequirements[MapLocation.SardasCave] = new LocationRequirement(new List<MapChange> { MapChange.Airship });
 			defaultRequirements[MapLocation.TitansTunnelWest] = new LocationRequirement(new List<MapChange> { MapChange.Airship });
 
+			// Initial dictionaries.
+			// Anything removed from these will get shuffled, anything remaining is considered fixed in place.
 			var placedMaps = TeleportShuffle.VanillaOverworldTeleports.ToDictionary(x => x.Key, x => x.Value);
 			var placedFloors = TeleportShuffle.VanillaStandardTeleports.ToDictionary(x => x.Key, x => x.Value);
 			var placedExits = new Dictionary<ExitTeleportIndex, Coordinate>();
 			if (flags.Towns)
 			{
+				// Conspicuously missing is Coneria; we do not shuffle it .... yet.
 				placedMaps.Remove(OverworldTeleportIndex.Pravoka);
 				placedMaps.Remove(OverworldTeleportIndex.Elfland);
 				placedMaps.Remove(OverworldTeleportIndex.Melmond);
@@ -224,17 +232,30 @@ namespace FF1Lib
 			}
 			if (flags.Entrances)
 			{
+				// Skip towns as they would be removed by the above.
+				// Remove SeaShrine1 so Onrac could lead to anywhere.
 				placedMaps = placedMaps
 					.Where(x => x.Key >= OverworldTeleportIndex.Coneria && x.Key <= OverworldTeleportIndex.Lefein)
 					.ToDictionary(x => x.Key, x => x.Value);
 				placedFloors.Remove(TeleportIndex.SeaShrine1);
 			}
-			if (flags.Floors) placedFloors = new Dictionary<TeleportIndex, TeleportDestination>();
+			if (flags.Floors)
+			{
+				placedFloors = new Dictionary<TeleportIndex, TeleportDestination>();
+			}
+
+			// All the finished destinations. We don't ever want to make anything new target one of these since some fixed map or floor already does.
 			var placedDestinations = placedMaps.Values.Select(x => x.Destination).Concat(placedFloors.Values.Select(x => x.Destination)).ToList();
 
+			// Grab a list of all non-unused overworld entrances, regardless of whether or not we've already placed them.
 			var maps = Enum.GetValues(typeof(OverworldTeleportIndex)).Cast<OverworldTeleportIndex>().Where(x => x < OverworldTeleportIndex.Unused1).ToList();
 			var shuffledOverworldCount = maps.Count(x => !placedMaps.ContainsKey(x));
+
+			// Grab a list of floors we haven't placed yet that can be shuffled. i.e. not including bottom of ice cave or ordeals.
 			var destinations = TeleportShuffle.FreePlacementFloors.Where(x => !placedDestinations.Contains(x.Destination)).ToList();
+
+			// Set aside a number of dead ends to accomodate all the extra branches that come about from forking floors.
+			// We need to ensure that at least this many dead ends come after the forks to avoid loose ends.
 			var extraForks = destinations.Where(x => x.Teleports.Count() > 1).SelectMany(x => x.Teleports.Skip(1)).Count();
 			if (destinations.Any()) extraForks++;
 			var minimumDeadEndsAtEnd = new List<TeleportDestination>();
@@ -244,6 +265,9 @@ namespace FF1Lib
 				minimumDeadEndsAtEnd.Add(destinations[firstIndexOfDeadEnd]);
 				destinations.RemoveAt(firstIndexOfDeadEnd);
 			}
+
+			// Shuffle the destinations and keep the ones that aren't already placed, and then bolt-on the held over dead ends from above.
+			// This will be the initial dataset from which we attempt to create a workable overworld and dungeon floor shuffling.
 			destinations.Shuffle(rng);
 			destinations = TeleportShuffle.ForcedTopFloors.Where(x => !placedDestinations.Contains(x.Destination)).Concat(destinations).Concat(minimumDeadEndsAtEnd).ToList();
 			var sanity = 0;
@@ -255,35 +279,50 @@ namespace FF1Lib
 				sanity++;
 				if (sanity > 500)
 					throw new InsaneException();
-				var i = 0;
-				var j = 0;
+				var i = 0; // overworld entrance destination counter
+				var j = 0; // underworld floor destination counter
+
+				// Analogues to all the placed dictionaries above. Everything "placed" will be copied here,
+				// and everything else will be shuffled as it's moved into these dictionaries, before sanity.
 				shuffled = new Dictionary<OverworldTeleportIndex, TeleportDestination>();
 				shuffledFloors = new Dictionary<TeleportIndex, TeleportDestination>();
 				shuffledExits = new Dictionary<ExitTeleportIndex, Coordinate>();
 				var teleports = new List<TeleportIndex>();
+
+				// Main Floor Shuffle Loop
 				var shuffleMaps = maps.ToList();
 				while (shuffleMaps.Any())
 				{
+					// Grab the next overworld entrance at random and write it to the shuffled output.
 					var owti = shuffleMaps.SpliceRandom(rng);
 					var destination = placedMaps.ContainsKey(owti) ? placedMaps[owti] : destinations[i++];
 					shuffled[owti] = destination;
+
 					if (destination.Exit != ExitTeleportIndex.None)
+					{
+						// Exiting floors like Fiend Orb Teleporters need to be updated to new OW coords.
 						shuffledExits.Add(destination.Exit, TeleportShuffle.OverworldCoordinates[owti]);
+					}
+
+					// If this destination has continuting teleports we recurse the handle them now.
 					teleports.AddRange(destination.Teleports);
 					while (teleports.Any())
 					{
+						// Grab the next underworld floor teleporter at random and write it to the shuffled floor output.
 						var teleport = teleports.SpliceRandom(rng);
 						var floor = placedFloors.ContainsKey(teleport) ? placedFloors[teleport] : destinations[shuffledOverworldCount + j++];
-						teleports.AddRange(floor.Teleports);
+						teleports.AddRange(floor.Teleports); // Keep looping until a dead end.
 						shuffledFloors[teleport] = floor;
 						if (floor.Exit != ExitTeleportIndex.None)
+						{
+							// Exiting floors like Fiend Orb Teleporters need to be updated to new OW coords.
 							shuffledExits.Add(floor.Exit, TeleportShuffle.OverworldCoordinates[owti]);
+						}
 					}
 				}
 			} while (!CheckEntranceSanity(shuffled, flags.AllowStartAreaDanager));
 
-			//Console.WriteLine($"\nShuffled Maps after sanity count: {sanity}");
-
+			// Pretty print map data
 			foreach (var map in shuffled.OrderBy(x => x.Key))
 			{
 				PutOverworldTeleport(map.Key, map.Value);
@@ -303,15 +342,18 @@ namespace FF1Lib
 					Console.WriteLine($"\t{innerName}{innerMap.SpoilerText.Trim()} ({Enum.GetName(typeof(Palette), OverworldToPalette[map.Key])} tint)");
 				}
 			}
+
+			// Write Exit teleport coords back to the ROM
 			foreach (var exit in shuffledExits)
 			{
 				_rom[teleportExitXOffset + (byte)exit.Key] = exit.Value.X;
 				_rom[teleportExitYOffset + (byte)exit.Key] = exit.Value.Y;
 			}
 
+			// Now it's time to update all the requirements for treasure sanity checking.
+			// Grab a list of all distinct destinations, and also create a couple lists of lists -
+			// All the contiguous walkable regions, and all the contiguous canoeable regions. Perhaps this belongs in another file?
 			var allTeleportLocations = shuffled.Select(x => x.Value.Destination).Concat(shuffledFloors.Select(x => x.Value.Destination)).Distinct().ToList();
-			var titanEast = shuffled.Single(x => x.Value.Destination == MapLocation.TitansTunnelEast);
-			var titanWest = shuffled.Single(x => x.Value.Destination == MapLocation.TitansTunnelWest);
 			var walkableNodes = new List<List<OverworldTeleportIndex>> {
 				new List<OverworldTeleportIndex>{OverworldTeleportIndex.ConeriaCastle1, OverworldTeleportIndex.Coneria, OverworldTeleportIndex.TempleOfFiends1},
 				new List<OverworldTeleportIndex>{OverworldTeleportIndex.MatoyasCave, OverworldTeleportIndex.Pravoka},
@@ -327,9 +369,14 @@ namespace FF1Lib
 				OverworldTeleportIndex.CrescentLake, OverworldTeleportIndex.GurguVolcano1, OverworldTeleportIndex.DwarfCave},
 				new List<OverworldTeleportIndex>{OverworldTeleportIndex.Onrac, OverworldTeleportIndex.Waterfall}
 			};
+
+			// Find out what two entrances the titan's tunnel now connects, and create new lists of MapLocations thusly connected.
+			var titanEast = shuffled.Single(x => x.Value.Destination == MapLocation.TitansTunnelEast);
+			var titanWest = shuffled.Single(x => x.Value.Destination == MapLocation.TitansTunnelWest);
 			var titanWalkLocations = walkableNodes.Where(x => x.Contains(titanEast.Key) || x.Contains(titanWest.Key)).SelectMany(x => x).Distinct().Select(x => shuffled[x].Destination);
 			var titanCanoeLocations = canoeableNodes.Where(x => x.Contains(titanEast.Key) || x.Contains(titanWest.Key)).SelectMany(x => x).Distinct().Select(x => shuffled[x].Destination);
 
+			// Put together a nice final mapping of MapLocations to requirements, in the shuffled map world.
 			var standardMapLookup = TeleportShuffle.StandardMapLocations;
 			var destinationsByLocation = shuffled
 				.Select(x => new KeyValuePair<MapLocation, TeleportDestination>((MapLocation)Enum.Parse(typeof(MapLocation), x.Key.ToString()), x.Value))
@@ -342,9 +389,14 @@ namespace FF1Lib
 							  destinationsByLocation[x.Key].Destination,
 							x => x.Value);
 
-
+			// Segregate out the simple mapping into Entrances and Floors
 			MapLocationRequirements = newRequirements.Where(x => x.Value.MapChanges != null).ToDictionary(x => x.Key, x => x.Value.MapChanges.ToList());
 			FloorLocationRequirements = newRequirements.Where(x => x.Value.MapChanges == null).ToDictionary(x => x.Key, x => x.Value.TeleportLocation);
+
+			// Broken Titan's Tunnel adjustments. This will erroneously indicate the Ruby is enough to access places on the other end of the
+			// tunnel, ignoring the requirement to get to the tunnel itself. So I'm commenting it out for now - the tunnel will never be
+			// required, but there shouldn't be any mistaken softlocks in the mean time.
+			/*
 			foreach (var key in titanWalkLocations)
 			{
 				MapLocationRequirements[key].Add(MapChange.TitanFed);
@@ -353,6 +405,7 @@ namespace FF1Lib
 			{
 				MapLocationRequirements[key].Add(MapChange.TitanFed | MapChange.Canoe);
 			}
+			*/
 
 			UpdateFullLocationRequirements();
 		}
