@@ -197,7 +197,11 @@ namespace FF1Lib
 
 				if (fullLocationRequirements.TryGetValue(item.MapLocation, out var flr))
 				{
-					Console.WriteLine($"[{String.Join("] OR [", flr.Item1.Select(mapChange => mapChange.ToString()).ToArray())}] AND {flr.Item2.ToString()}");
+					Console.WriteLine($"FULL [{String.Join("] OR [", flr.Item1.Select(mapChange => mapChange.ToString()).ToArray())}] AND {flr.Item2.ToString()}");
+				}
+				if (mapLocationFloorRequirements.TryGetValue(item.MapLocation, out var mlfr))
+				{
+					Console.WriteLine($"MLFR {flr.Item2.ToString()}");
 				}
 			});
 

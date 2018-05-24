@@ -391,10 +391,31 @@ namespace FF1Lib
 							  destinationsByLocation[x.Key].Destination,
 							x => x.Value);
 
+			Console.WriteLine("DEFAULT REQS:");
+			defaultRequirements.All(item => 
+			{
+				if (item.Value.TeleportLocation != null)
+					Console.WriteLine($"{item.Key.ToString()} requires {item.Value.TeleportLocation}");
+				return true;
+			});
+			Console.WriteLine("NEW REQS:");
+			newRequirements.All(item => 
+			{
+				if (item.Value.TeleportLocation != null)
+					Console.WriteLine($"{item.Key.ToString()} requires {item.Value.TeleportLocation}");
+				return true;
+			});
+
 			// Segregate out the simple mapping into Entrances and Floors
 			MapLocationRequirements = newRequirements.Where(x => x.Value.MapChanges != null).ToDictionary(x => x.Key, x => x.Value.MapChanges.ToList());
 			FloorLocationRequirements = newRequirements.Where(x => x.Value.MapChanges == null).ToDictionary(x => x.Key, x => x.Value.TeleportLocation);
 
+			Console.WriteLine("DICT REQS:");
+			FloorLocationRequirements.All(item => 
+			{
+				Console.WriteLine($"{item.Key.ToString()} requires {item.Value.Item1} - {item.Value.Item2}");
+				return true;
+			});
 			// Broken Titan's Tunnel adjustments. This will erroneously indicate the Ruby is enough to access places on the other end of the
 			// tunnel, ignoring the requirement to get to the tunnel itself. So I'm commenting it out for now - the tunnel will never be
 			// required, but there shouldn't be any mistaken softlocks in the mean time.
