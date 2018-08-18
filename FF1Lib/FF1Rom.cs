@@ -532,6 +532,8 @@ namespace FF1Lib
 			PutInBank(0x0F, 0x9280, FF1Text.TextToBytes("Critical hit!!", false));
 			PutInBank(0x0F, 0x9290, FF1Text.TextToBytes(" Critical hits!", false));
 			PutInBank(0x0F, 0x92A0, Blob.FromHex("AD6B68C901F01EA2019D3A6BA9118D3A6BA900E89D3A6BA0FFC8E8B990929D3A6BD0F6F00EA2FFA0FFC8E8B980929D3A6BD0F6A23AA06BA904201CF7EEF86A60"));
+
+			CombineTentAndCabinCode();
 		}
 
 		public void MakeSpace()

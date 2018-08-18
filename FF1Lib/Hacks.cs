@@ -507,5 +507,11 @@ namespace FF1Lib
 
 			Put(0x2C218, Blob.FromHex("0F0F8F2CACAC7E7C"));
 		}
+
+		public void CombineTentAndCabinCode()
+		{
+			PutInBank(0x0E, 0xB284, Blob.FromHex("a52d4ab01cce3660a91e100aa52d4ab010ce3760a93c203fb5a91a20e0b24c1DB1a91b202bb94c48b1"));
+			Data[0x3B1A5] = 0x90; // Update pointer for Cabin jump
+		}
 	}
 }
